@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbotapp/hive/boxes.dart';
+import 'package:chatbotapp/hive/user_model.dart'; // Import model của user
 import 'package:chatbotapp/hive/settings.dart';
 import 'package:chatbotapp/providers/settings_provider.dart';
 import 'package:chatbotapp/widgets/build_display_image.dart';
@@ -21,8 +22,9 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   File? file;
   String userImage = '';
-  String userName = 'Aayush';
+  String userName = 'Guest'; // Default name is 'Guest'
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController _nameController = TextEditingController();
 
   // pick an image
   void pickImage() async {
@@ -47,27 +49,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void getUserData() {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) {
-        // get user data fro box
+        // get user data from box
         final userBox = Boxes.getUser();
 
-        // check is user data is not empty
+        // check if user data is not empty
         if (userBox.isNotEmpty) {
           final user = userBox.getAt(0);
-          setState(
-            () {
-              userImage = user!.name;
-              userName = user.image;
-            },
-          );
+          setState(() {
+            userName = user?.name ?? 'Guest';
+            userImage = user?.image ?? '';
+            _nameController.text = userName; // Populate name controller
+          });
         }
       },
     );
+  }
+
+  // Save user data to Hive
+  void saveUserData() {
+    final userBox = Boxes.getUser();
+    final user = UserModel(name: userName, image: userImage);
+    if (userBox.isEmpty) {
+      userBox.add(user); // Add new user if box is empty
+    } else {
+      userBox.putAt(0, user); // Update existing user
+    }
   }
 
   @override
   void initState() {
     getUserData();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _nameController
+        .dispose(); // Clean up the controller when the screen is disposed
+    super.dispose();
   }
 
   @override
@@ -79,10 +98,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         actions: [
           IconButton(
-            // icon: const Icon(Icons.check),
             icon: const Icon(CupertinoIcons.checkmark),
             onPressed: () {
-              // save data
+              // Save data when the user presses check
+              setState(() {
+                userName = _nameController.text.trim();
+                saveUserData(); // Save updated user data to Hive
+              });
             },
           ),
         ],
@@ -105,13 +127,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
               ),
-
               const SizedBox(height: 20.0),
 
-              // user name
-              Text(
-                userName,
-                style: Theme.of(context).textTheme.titleLarge,
+              // TextField to edit username
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Enter your name',
+                  hintText: 'Your name',
+                  border: OutlineInputBorder(),
+                ),
               ),
 
               const SizedBox(height: 40.0),
@@ -124,7 +149,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         // ai voice
                         SettingsTile(
-                          // icon: Icons.mic,
                           icon: CupertinoIcons.mic,
                           title: 'Enable AI voice',
                           value: false,
@@ -136,12 +160,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
-
                         const SizedBox(height: 10.0),
-
                         // Theme
                         SettingsTile(
-                          // icon: Icons.light_mode,
                           icon: CupertinoIcons.sun_max,
                           title: 'Theme',
                           value: false,
@@ -161,19 +182,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         // ai voice
                         SettingsTile(
-                            icon: CupertinoIcons.mic,
-                            title: 'Enable AI voice',
-                            value: settings!.shouldSpeak,
-                            onChanged: (value) {
-                              final settingProvider =
-                                  context.read<SettingsProvider>();
-                              settingProvider.toggleSpeak(
-                                value: value,
-                              );
-                            }),
-
+                          icon: CupertinoIcons.mic,
+                          title: 'Enable AI voice',
+                          value: settings!.shouldSpeak,
+                          onChanged: (value) {
+                            final settingProvider =
+                                context.read<SettingsProvider>();
+                            settingProvider.toggleSpeak(
+                              value: value,
+                            );
+                          },
+                        ),
                         const SizedBox(height: 10.0),
-
                         // theme
                         SettingsTile(
                           icon: settings.isDarkTheme

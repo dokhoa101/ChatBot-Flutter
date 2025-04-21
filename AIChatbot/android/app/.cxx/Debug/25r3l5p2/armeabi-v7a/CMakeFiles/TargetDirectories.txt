@@ -1,0 +1,2 @@
+D:/App/Gemini-ChatBot-Flutter/AIChatbot/android/app/.cxx/Debug/25r3l5p2/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/App/Gemini-ChatBot-Flutter/AIChatbot/android/app/.cxx/Debug/25r3l5p2/armeabi-v7a/CMakeFiles/rebuild_cache.dir
