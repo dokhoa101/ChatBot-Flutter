@@ -20,7 +20,7 @@ flutter pub get
 Tạo file `.env` và thêm:
 
 ```
-GEMINI_API_KEY=your_api_key
+API_KEY=your_api_key
 ```
 
 Chạy app:
