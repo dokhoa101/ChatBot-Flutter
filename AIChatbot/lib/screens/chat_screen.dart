@@ -5,6 +5,8 @@ import 'package:chatbotapp/utility/animated_dialog.dart';
 import 'package:chatbotapp/widgets/bottom_chat_field.dart';
 import 'package:chatbotapp/widgets/chat_messages.dart';
 import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -55,7 +57,14 @@ class _ChatScreenState extends State<ChatScreen> {
           appBar: AppBar(
             backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
             centerTitle: true,
-            title: const Text('Chat with Gemini'),
+            title: const Row(
+              children: [
+                Icon(FontAwesomeIcons.robot, size: 30), // Biểu tượng robot
+                SizedBox(width: 8), // Khoảng cách giữa biểu tượng và văn bản
+                Text('Chat with AI Asistant'),
+              ],
+            ),
+
             actions: [
               if (chatProvider.inChatMessages.isNotEmpty)
                 Padding(

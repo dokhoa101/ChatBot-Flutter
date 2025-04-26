@@ -12,6 +12,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -23,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? file;
   String userImage = '';
   String userName = 'Guest'; // Default name is 'Guest'
+  bool isEditing = false; // Điều khiển trạng thái enable/disable của TextField
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _nameController = TextEditingController();
 
@@ -84,8 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    _nameController
-        .dispose(); // Clean up the controller when the screen is disposed
+    _nameController.dispose(); // Clean up the controller when the screen is disposed
     super.dispose();
   }
 
@@ -102,12 +103,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               // Save data when the user presses check
               setState(() {
-                userName = _nameController.text.trim();
+                userName = _nameController.text.trim().isEmpty ? 'Guest' : _nameController.text.trim();
                 saveUserData(); // Save updated user data to Hive
+                isEditing = false; // Disable editing after saving
               });
             },
           ),
         ],
+        leading: IconButton(
+          icon: Icon(isEditing ? CupertinoIcons.pencil_slash : CupertinoIcons.pencil),
+          onPressed: () {
+            setState(() {
+              isEditing = !isEditing;
+              if (!isEditing) {
+                _nameController.text = userName; // Reset the name to saved value when exiting edit mode
+              }
+            });
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(
@@ -137,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   hintText: 'Your name',
                   border: OutlineInputBorder(),
                 ),
+                enabled: isEditing,
               ),
 
               const SizedBox(height: 40.0),
