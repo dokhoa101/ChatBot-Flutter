@@ -12,7 +12,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -86,7 +85,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose(); // Clean up the controller when the screen is disposed
+    _nameController
+        .dispose(); // Clean up the controller when the screen is disposed
     super.dispose();
   }
 
@@ -103,7 +103,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               // Save data when the user presses check
               setState(() {
-                userName = _nameController.text.trim().isEmpty ? 'Guest' : _nameController.text.trim();
+                userName = _nameController.text.trim().isEmpty
+                    ? 'Guest'
+                    : _nameController.text.trim();
                 saveUserData(); // Save updated user data to Hive
                 isEditing = false; // Disable editing after saving
               });
@@ -111,12 +113,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
         leading: IconButton(
-          icon: Icon(isEditing ? CupertinoIcons.pencil_slash : CupertinoIcons.pencil),
+          icon: Icon(
+              isEditing ? CupertinoIcons.pencil_slash : CupertinoIcons.pencil),
           onPressed: () {
             setState(() {
               isEditing = !isEditing;
               if (!isEditing) {
-                _nameController.text = userName; // Reset the name to saved value when exiting edit mode
+                _nameController.text =
+                    userName; // Reset the name to saved value when exiting edit mode
               }
             });
           },
@@ -145,10 +149,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // TextField to edit username
               TextField(
                 controller: _nameController,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
                 decoration: InputDecoration(
-                  labelText: 'Enter your name',
                   hintText: 'Your name',
-                  border: OutlineInputBorder(),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
                 ),
                 enabled: isEditing,
               ),
@@ -158,79 +169,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ValueListenableBuilder<Box<Settings>>(
                 valueListenable: Boxes.getSettings().listenable(),
                 builder: (context, box, child) {
-                  if (box.isEmpty) {
-                    return Column(
+                  final settingProvider = context.read<SettingsProvider>();
+                  final settings = box.isNotEmpty ? box.getAt(0) : null;
+
+                  final shouldSpeak = settings?.shouldSpeak ?? false;
+                  final isDarkTheme = settings?.isDarkTheme ?? false;
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 20.0),
+                    child: Column(
                       children: [
-                        // ai voice
-                        SettingsTile(
+                        _SettingCard(
                           icon: CupertinoIcons.mic,
-                          title: 'Enable AI voice',
-                          value: false,
+                          title: 'Enable AI Voice',
+                          value: shouldSpeak,
                           onChanged: (value) {
-                            final settingProvider =
-                                context.read<SettingsProvider>();
-                            settingProvider.toggleSpeak(
-                              value: value,
-                            );
+                            settingProvider.toggleSpeak(value: value);
                           },
                         ),
-                        const SizedBox(height: 10.0),
-                        // Theme
-                        SettingsTile(
-                          icon: CupertinoIcons.sun_max,
-                          title: 'Theme',
-                          value: false,
-                          onChanged: (value) {
-                            final settingProvider =
-                                context.read<SettingsProvider>();
-                            settingProvider.toggleDarkMode(
-                              value: value,
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  } else {
-                    final settings = box.getAt(0);
-                    return Column(
-                      children: [
-                        // ai voice
-                        SettingsTile(
-                          icon: CupertinoIcons.mic,
-                          title: 'Enable AI voice',
-                          value: settings!.shouldSpeak,
-                          onChanged: (value) {
-                            final settingProvider =
-                                context.read<SettingsProvider>();
-                            settingProvider.toggleSpeak(
-                              value: value,
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 10.0),
-                        // theme
-                        SettingsTile(
-                          icon: settings.isDarkTheme
+                        const SizedBox(height: 16.0),
+                        _SettingCard(
+                          icon: isDarkTheme
                               ? CupertinoIcons.moon_fill
                               : CupertinoIcons.sun_max_fill,
                           title: 'Theme',
-                          value: settings.isDarkTheme,
+                          value: isDarkTheme,
                           onChanged: (value) {
-                            final settingProvider =
-                                context.read<SettingsProvider>();
-                            settingProvider.toggleDarkMode(
-                              value: value,
-                            );
+                            settingProvider.toggleDarkMode(value: value);
                           },
                         ),
                       ],
-                    );
-                  }
+                    ),
+                  );
                 },
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SettingCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SettingCard({
+    Key? key,
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      elevation: 4,
+      child: ListTile(
+        leading: Icon(icon, size: 28),
+        title: Text(
+          title,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        trailing: Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       ),
     );
   }
